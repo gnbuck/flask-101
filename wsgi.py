@@ -17,3 +17,7 @@ def read():
         3: { 'id': 3, 'name': 'awsome-flask.org' },
     }
     return PRODUCTS
+
+@app.route("/api/v1/products")
+def create():
+    pass
