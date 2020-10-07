@@ -1,7 +1,18 @@
 # wsgi.py
 # pylint: disable=missing-docstring
 
-from flask import Flask
+import itertools
+
+from flask import (
+    Flask,
+    request,
+    jsonify
+)
+
+
+from src.db import PRODUCTS as products
+from src.responses import Responses as resp
+
 
 app = Flask(__name__)
 
@@ -11,13 +22,41 @@ def hello():
 
 @app.route('/api/v1/products')
 def read():
-    PRODUCTS = {
-        1: { 'id': 1, 'name': 'Skello' },
-        2: { 'id': 2, 'name': 'Socialive.tv' },
-        3: { 'id': 3, 'name': 'awsome-flask.org' },
-    }
-    return PRODUCTS
+    return products
 
-@app.route("/api/v1/products")
+
+@app.route('/api/v1/products/<uuid>', methods=["GET"])
+def read_by_id(uuid):
+    products = read()
+    product = products.get(int(uuid), None)
+    if product is None:
+        return resp.not_found_404()
+    return product
+
+
+@app.route('/api/v1/products/<uuid>', methods=["DELETE"])
+def delete_by_id(uuid):
+    products = read()
+    product = products.get(int(uuid), None)
+    if product is None:
+        return resp.not_found_404()
+    del products[int(uuid)]
+    return resp.deleted_204()
+
+@app.route('/api/v1/products', methods=["POST"])
 def create():
-    pass
+    products = read()
+    body = request.get_json()
+    for product in products.items():
+        if body["name"] == product[1]["name"]:
+            return "Forbidden", 403
+    start_index = len(products) + 1
+    identifier_generator = next(itertools.count(start_index))
+    new_product = {
+        int(identifier_generator): {
+            "id": int(identifier_generator),
+            "name": body["name"],
+        }
+    }
+    products.update(new_product)
+    return new_product, 201
