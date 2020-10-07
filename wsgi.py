@@ -1,7 +1,7 @@
 # wsgi.py
 # pylint: disable=missing-docstring
 
-from flask import Flask, render_template
+from flask import Flask
 
 from src.db import PRODUCTS
 from src.errors import Exceptions as e
